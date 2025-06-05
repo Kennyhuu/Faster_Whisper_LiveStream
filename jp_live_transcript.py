@@ -4,8 +4,8 @@ import ffmpeg
 import numpy as np
 from faster_whisper import WhisperModel
 
-#model = WhisperModel("base", device="cpu", compute_type="int8")
-model = WhisperModel("base", device="cuda", compute_type="float32")
+#Default model = WhisperModel("base", device="cpu", compute_type="int8")
+model = WhisperModel("large-v3", device="cuda", compute_type="float32")
 
 
 def get_youtube_livestream_url(youtube_url: str):
@@ -55,8 +55,8 @@ def get_recording_and_transrecord(yt_audio_link: str, language: str):
     except Exception as e:
         print("Failed to open ffmpeg stream:", str(e))
         exit()
-
-    chunk_size = 16000 * 2 * 7  # 5 seconds of 16kHz mono 16-bit
+    # Default chunk_size = 16000 * 2 * 5  # 5 seconds audio: sample_rate * bytes_per_sample * seconds
+    chunk_size = 16000 * 2 * 10  # 5 seconds of 16kHz mono 16-bit
 
     try:
         while True:
@@ -69,8 +69,9 @@ def get_recording_and_transrecord(yt_audio_link: str, language: str):
             if len(audio) == 0:
                 continue
 
+            # Default beam_size = 5
             segments, _ = model.transcribe(audio,
-                                           beam_size=5,
+                                           beam_size=10,
                                            vad_filter=True,
                                            language=language,
                                            task="translate")
@@ -88,10 +89,5 @@ def get_recording_and_transrecord(yt_audio_link: str, language: str):
         process.wait()
 
 
-if __name__ == '__main__':
-    youtube_url = "https://www.youtube.com/watch?v=vKsoxx2wdSA&ab_channel=Koyorich.%E5%8D%9A%E8%A1%A3%E3%81%93%E3%82%88%E3%82%8A-holoX-"
 
-    yt_audio_link = get_youtube_livestream_url(youtube_url)
-
-    get_recording_and_transrecord(yt_audio_link, "ja")
 
